@@ -1,0 +1,48 @@
+name: Build and Deploy Docker Image to Google Cloud Run
+
+on:
+  push:
+    branches:
+      - main  # Ou a branch que você deseja monitorar
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Passo 1: Checar o código do repositório
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Passo 2: Configurar o Docker Buildx (para construção da imagem)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Passo 3: Configurar as credenciais do Google Cloud
+      - name: Set up Google Cloud Credentials
+        uses: google-github-actions/setup-gcloud@v0.4.0
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}  # A chave de serviço armazenada nos Secrets do GitHub
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      # Passo 4: Login no Google Container Registry (GCR)
+      - name: Login to Google Container Registry
+        run: gcloud auth configure-docker
+
+      # Passo 5: Construir a imagem Docker
+      - name: Build Docker Image
+        run: docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/nginx-image:latest .
+
+      # Passo 6: Enviar a imagem para o GCR
+      - name: Push Docker Image to Google Container Registry
+        run: docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/nginx-image:latest
+
+      # Passo 7: Implantar a imagem no Google Cloud Run
+      - name: Deploy to Google Cloud Run
+        run: |
+          gcloud run deploy nginx-service \
+            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/nginx-image:latest \
+            --platform managed \
+            --region ${{ secrets.GCP_REGION }} \
+            --allow-unauthenticated \
+            --project ${{ secrets.GCP_PROJECT_ID }}
