@@ -3,7 +3,7 @@ name: Build and Deploy Docker Image to Google Cloud Run
 on:
   push:
     branches:
-      - main  # Ou a branch que você deseja monitorar
+      - main  # Ou a branch que você deseja monitorar  ?
 
 jobs:
   build-and-deploy:
