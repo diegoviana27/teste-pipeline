@@ -1,32 +1,40 @@
-name: Deploy to Google Cloud Run
+name: Deploy Nginx to Cloud Run
 
 on:
   push:
     branches:
-      - main  # ou a branch que você deseja usar para deploy
+      - main
 
 jobs:
   deploy:
-    name: Deploy to Cloud Run
+    name: Build and Deploy
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
+    - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Authenticate to Google Cloud
+    - name: Authenticate with GCP
       uses: google-github-actions/auth@v2
       with:
         credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
-    - name: Setup gcloud CLI
+    - name: Set up gcloud
       uses: google-github-actions/setup-gcloud@v2
+
+    - name: Configure Docker for gcloud
+      run: gcloud auth configure-docker
+
+    - name: Build and Push Docker image
+      run: |
+        IMAGE=gcr.io/${{ secrets.GCP_PROJECT }}/nginx-image
+        docker build -t $IMAGE .
+        docker push $IMAGE
 
     - name: Deploy to Cloud Run
       run: |
-        gcloud config set project ${{ secrets.GCP_PROJECT }}
         gcloud run deploy ${{ secrets.CLOUD_RUN_SERVICE }} \
-          --source . \
+          --image gcr.io/${{ secrets.GCP_PROJECT }}/nginx-image \
           --region ${{ secrets.GCP_REGION }} \
           --platform managed \
           --allow-unauthenticated
