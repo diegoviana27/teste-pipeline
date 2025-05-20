@@ -28,6 +28,14 @@ jobs:
       uses: google-github-actions/auth@v1
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}  # Chave da service account
+        
+    - name: Enable required services
+      run: |-
+        gcloud services enable \
+          cloudbuild.googleapis.com \
+          run.googleapis.com \
+          artifactregistry.googleapis.com \
+          --project ${{ secrets.GCP_PROJECT_ID }}
 
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
