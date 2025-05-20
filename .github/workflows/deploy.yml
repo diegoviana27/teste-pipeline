@@ -31,11 +31,11 @@ jobs:
 
       # Passo 5: Construir a imagem Docker
       - name: Build Docker Image
-        run: docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/nginx-image:latest .
+        run: docker build -t us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/teste-pipeline/nginx-image:latest .
 
       # Passo 6: Enviar a imagem para o GCR
       - name: Push Docker Image to Google Container Registry
-        run: docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/nginx-image:latest
+        run: docker push us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/teste-pipeline/nginx-image:latest
 
       # Passo 7: Implantar a imagem no Google Cloud Run
       - name: Deploy to Google Cloud Run
