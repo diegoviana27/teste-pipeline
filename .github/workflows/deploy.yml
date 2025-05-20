@@ -1,32 +1,50 @@
-name: Deploy to Google Cloud Run
+name: Build and Deploy to Cloud Run
 
 on:
   push:
     branches:
-      - main  # ou a branch que você deseja usar para deploy
+      - main  # Aciona o workflow quando há push para a branch main
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  SERVICE_NAME: meu-servico  # Nome do serviço no Cloud Run
+  REGION: us-central1        # Região do Cloud Run
 
 jobs:
-  deploy:
-    name: Deploy to Cloud Run
+  setup-build-deploy:
+    name: Build, Push and Deploy
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: 'read'
+      id-token: 'write'  # Necessário para autenticação com o Google Cloud
+
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v4
 
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
+    # Configura o gcloud CLI
+    - name: Google Cloud Auth
+      uses: google-github-actions/auth@v1
       with:
-        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+        credentials_json: ${{ secrets.GCP_SA_KEY }}  # Chave da service account
 
-    - name: Setup gcloud CLI
-      uses: google-github-actions/setup-gcloud@v2
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
 
+    # Constrói e envia a imagem para o Google Container Registry
+    - name: Build and Push Container
+      run: |-
+        gcloud builds submit \
+          --tag gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA \
+          --project $PROJECT_ID
+
+    # Implanta no Cloud Run
     - name: Deploy to Cloud Run
-      run: |
-        gcloud config set project ${{ secrets.GCP_PROJECT }}
-        gcloud run deploy ${{ secrets.CLOUD_RUN_SERVICE }} \
-          --source . \
-          --region ${{ secrets.GCP_REGION }} \
+      run: |-
+        gcloud run deploy $SERVICE_NAME \
+          --image gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA \
+          --region $REGION \
           --platform managed \
-          --allow-unauthenticated
+          --allow-unauthenticated \
+          --project $PROJECT_ID
