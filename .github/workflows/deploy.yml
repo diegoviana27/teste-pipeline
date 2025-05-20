@@ -41,7 +41,7 @@ jobs:
       - name: Deploy to Google Cloud Run
         run: |
           gcloud run deploy nginx-service \
-            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/nginx-image:latest \
+            --image us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/teste-pipeline/nginx-image:latest \
             --platform managed \
             --region ${{ secrets.GCP_REGION }} \
             --allow-unauthenticated \
