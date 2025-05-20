@@ -1,8 +1,11 @@
-# Use a imagem base do Nginx
 FROM nginx:alpine
 
-# Copie os arquivos de configuração ou página para o contêiner
-COPY ./index.html /usr/share/nginx/html/index.html
+# Substitui a configuração padrão do Nginx para usar a porta 8080
+RUN sed -i 's/listen\s*80;/listen 8080;/g' /etc/nginx/conf.d/default.conf
 
-# Exponha a porta do Nginx (porta 80)
-EXPOSE 80
+# Copia arquivos estáticos (se necessário)
+COPY index.html /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expõe a porta 8080 (obrigatório para Cloud Run)
+EXPOSE 8080
