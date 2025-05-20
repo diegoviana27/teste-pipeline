@@ -18,11 +18,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      # Passo 3: Configurar as credenciais do Google Cloud
-      - name: Set up Google Cloud Credentials
-        uses: google-github-actions/setup-gcloud@v0.4.0
+      # Passo 3: Configurar autenticação com Google Cloud usando a nova ação
+      - name: Set up Google Cloud Authentication
+        uses: google-github-actions/auth@v0.4.0
         with:
-          service_account_key: ${{ secrets.GCP_SA_KEY }}  # A chave de serviço armazenada nos Secrets do GitHub
+          credentials_json: ${{ secrets.GCP_SA_KEY }}  # A chave da conta de serviço armazenada nos Secrets do GitHub
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       # Passo 4: Login no Google Container Registry (GCR)
