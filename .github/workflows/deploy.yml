@@ -8,7 +8,7 @@ env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GAR_LOCATION: us-east1  # Altere para sua região
   REPOSITORY: repo  # N ome do re
-  SERVICE_NAME: nginx-cloud-run
+  SERVICE_NAME: nginx-cloud-run-github
 
 jobs:
   deploy:
