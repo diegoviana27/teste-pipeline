@@ -1,48 +1,32 @@
-name: Build and Deploy Docker Image to Google Cloud Run
+name: Deploy to Google Cloud Run
 
 on:
   push:
     branches:
-      - main  # Ou a branch que você deseja monitorar  ?
+      - main  # ou a branch que você deseja usar para deploy
 
 jobs:
-  build-and-deploy:
+  deploy:
+    name: Deploy to Cloud Run
     runs-on: ubuntu-latest
 
     steps:
-      # Passo 1: Checar o código do repositório
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      # Passo 2: Configurar o Docker Buildx (para construção da imagem)
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
-      # Passo 3: Configurar autenticação com Google Cloud usando a nova ação
-      - name: Set up Google Cloud Authentication
-        uses: google-github-actions/auth@v0.4.0
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}  # A chave da conta de serviço armazenada nos Secrets do GitHub
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+    - name: Setup gcloud CLI
+      uses: google-github-actions/setup-gcloud@v2
 
-      # Passo 4: Login no Google Container Registry (GCR)
-      - name: Login to Google Container Registry
-        run: gcloud auth configure-docker
-
-      # Passo 5: Construir a imagem Docker
-      - name: Build Docker Image
-        run: docker build -t us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/teste-pipeline/nginx-image:latest .
-
-      # Passo 6: Enviar a imagem para o GCR
-      - name: Push Docker Image to Google Container Registry
-        run: docker push us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/teste-pipeline/nginx-image:latest
-
-      # Passo 7: Implantar a imagem no Google Cloud Run
-      - name: Deploy to Google Cloud Run
-        run: |
-          gcloud run deploy nginx-service \
-            --image us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/teste-pipeline/nginx-image:latest \
-            --platform managed \
-            --region ${{ secrets.GCP_REGION }} \
-            --allow-unauthenticated \
-            --project ${{ secrets.GCP_PROJECT_ID }}
+    - name: Deploy to Cloud Run
+      run: |
+        gcloud config set project ${{ secrets.GCP_PROJECT }}
+        gcloud run deploy ${{ secrets.CLOUD_RUN_SERVICE }} \
+          --source . \
+          --region ${{ secrets.GCP_REGION }} \
+          --platform managed \
+          --allow-unauthenticated
