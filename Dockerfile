@@ -5,4 +5,5 @@ FROM nginx:alpine
 COPY ./index.html /usr/share/nginx/html/index.html
 
 # Exponha a porta do Nginx (porta 80)
+
 EXPOSE 80
