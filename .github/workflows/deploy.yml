@@ -1,58 +1,44 @@
-name: Build and Deploy to Cloud Run
+name: Deploy to Google Cloud Run
 
 on:
   push:
-    branches:
-      - main  # Aciona o workflow quando há push para a branch main
+    branches: ["main"]
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  SERVICE_NAME: meu-servico  # Nome do serviço no Cloud Run
-  REGION: us-central1        # Região do Cloud Run
+  GAR_LOCATION: us-central1  # Altere para sua região
+  REPOSITORY: meu-app-nginx  # Nome do repositório no Artifact Registry
+  SERVICE_NAME: nginx-cloud-run
 
 jobs:
-  setup-build-deploy:
-    name: Build, Push and Deploy
+  deploy:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: 'read'
-      id-token: 'write'  # Necessário para autenticação com o Google Cloud
-
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    # Configura o gcloud CLI
-    - name: Google Cloud Auth
-      uses: google-github-actions/auth@v1
-      with:
-        credentials_json: ${{ secrets.GCP_SA_KEY }}  # Chave da service account
-        
-    - name: Enable required services
-      run: |-
-        gcloud services enable \
-          cloudbuild.googleapis.com \
-          run.googleapis.com \
-          artifactregistry.googleapis.com \
-          --project ${{ secrets.GCP_PROJECT_ID }}
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v1
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
 
-    # Constrói e envia a imagem para o Google Container Registry
-    - name: Build and Push Container
-      run: |-
-        gcloud builds submit \
-          --tag gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA \
-          --project $PROJECT_ID
+      - name: Build Docker image
+        run: |-
+          docker build -t $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest .
 
-    # Implanta no Cloud Run
-    - name: Deploy to Cloud Run
-      run: |-
-        gcloud run deploy $SERVICE_NAME \
-          --image gcr.io/$PROJECT_ID/$SERVICE_NAME:$GITHUB_SHA \
-          --region $REGION \
-          --platform managed \
-          --allow-unauthenticated \
-          --project $PROJECT_ID
+      - name: Push Docker image to Google Artifact Registry
+        run: |-
+          gcloud auth configure-docker $GAR_LOCATION-docker.pkg.dev
+          docker push $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest
+
+      - name: Deploy to Cloud Run
+        run: |-
+          gcloud run deploy $SERVICE_NAME \
+            --image $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest \
+            --region $GAR_LOCATION \
+            --platform managed \
+            --allow-unauthenticated
