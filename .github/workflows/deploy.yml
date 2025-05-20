@@ -7,7 +7,7 @@ on:
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GAR_LOCATION: us-central1  # Altere para sua região
-  REPOSITORY: meu-app-nginx  # Nome do repositório no Artifact Registry
+  REPOSITORY: meu-app-nginx  # N ome do repositório no Artifact Registry
   SERVICE_NAME: nginx-cloud-run
 
 jobs:
