@@ -7,7 +7,7 @@ on:
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GAR_LOCATION: us-east1  # Altere para sua região
-  REPOSITORY: teste-pipeline  # N ome do repositório no Artifact Registry
+  REPOSITORY: teste-pipeline  # N ome do re
   SERVICE_NAME: nginx-cloud-run
 
 jobs:
