@@ -1,5 +1,5 @@
 # Usando a imagem base do Gradle para compilar a aplicação
-FROM eclipse-temurin:17-jdk-alpine AS build
+FROM gradle:8.7.0-jdk21 AS build
 
 # Definindo diretório de trabalho e copiando o código-fonte
 COPY --chown=gradle:gradle . /home/gradle/src
@@ -9,7 +9,7 @@ WORKDIR /home/gradle/src
 RUN gradle build --no-daemon
 
 # Imagem final para execução (usando OpenJDK 17)
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk-alpine
 
 # Copiando o JAR gerado para a imagem final
 COPY --from=build /home/gradle/src/build/libs/*.jar /app/app.jar
