@@ -8,8 +8,8 @@ WORKDIR /home/gradle/src
 # Executando a construção e testando, mas sem rodar os testes (evitando o uso de -x test se não for necessário)
 RUN gradle build --no-daemon
 
-# Imagem final para execução (usando OpenJDK 17)
-FROM eclipse-temurin:17-jdk-alpine
+# Imagem final para execução (usando OpenJDK 21)
+FROM eclipse-temurin:21-jdk-alpine
 
 # Copiando o JAR gerado para a imagem final
 COPY --from=build /home/gradle/src/build/libs/*.jar /app/app.jar
