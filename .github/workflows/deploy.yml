@@ -41,5 +41,4 @@ jobs:
             --image $GAR_LOCATION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest \
             --region $GAR_LOCATION \
             --platform managed \
-            --allow-unauthenticated \
-            --timeout=600s
+            --allow-unauthenticated
