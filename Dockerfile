@@ -1,10 +1,21 @@
-FROM nginx:alpine
+# Usando a imagem base do Gradle para compilar a aplicação
+FROM gradle:8.7.0-jdk21 AS build
 
-# Substitui a configuração padrão do Nginx para usar a porta 8080
-RUN sed -i 's/listen\s*80;/listen 8080;/g' /etc/nginx/conf.d/default.conf
+# Definindo diretório de trabalho e copiando o código-fonte
+COPY --chown=gradle:gradle . /home/gradle/src
+WORKDIR /home/gradle/src
 
-# Copia arquivos estáticos (se necessário)
-COPY index.html /usr/share/nginx/html
+# Executando a construção e testando, mas sem rodar os testes (evitando o uso de -x test se não for necessário)
+RUN gradle build --no-daemon
 
-# Expõe a porta 8080 (obrigatório para Cloud Run)
+# Imagem final para execução (usando OpenJDK 17)
+FROM openjdk:17-jdk-slim
+
+# Copiando o JAR gerado para a imagem final
+COPY --from=build /home/gradle/src/build/libs/demo-0.0.1-SNAPSHOT.jar /app/app.jar
+
 EXPOSE 8080
+
+# Configurando o ponto de entrada da aplicação
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+

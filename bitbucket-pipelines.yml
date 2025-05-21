@@ -1,0 +1,25 @@
+image: google/cloud-sdk:slim
+
+pipelines:
+  default:
+    - step:
+        name: Deploy to Google Cloud Run
+        services:
+          - docker
+        caches:
+          - docker
+        script:
+          - echo $GCP_SA_KEY > $BITBUCKET_CLONE_DIR/gcp-key.json
+          - gcloud auth activate-service-account --key-file=gcp-key.json
+          - gcloud config set project $GCP_PROJECT_ID
+          - gcloud config set compute/region $GAR_LOCATION
+          - gcloud config set compute/zone $GAR_LOCATION-a
+          
+          - docker build -t $GAR_LOCATION-docker.pkg.dev/$GCP_PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest .
+          - gcloud auth configure-docker $GAR_LOCATION-docker.pkg.dev
+          - docker push $GAR_LOCATION-docker.pkg.dev/$GCP_PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest
+
+          - gcloud run deploy $SERVICE_NAME --image $GAR_LOCATION-docker.pkg.dev/$GCP_PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest --region $GAR_LOCATION --platform managed --allow-unauthenticated --timeout=600s
+
+          
+
